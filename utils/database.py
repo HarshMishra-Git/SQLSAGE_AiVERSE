@@ -1,8 +1,12 @@
 """Database utility functions"""
 import os
+from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from typing import Optional, List, Dict, Any, Union
+
+# Load environment variables from .env file
+load_dotenv()
 
 class Database:
     """Database connection and query execution handler"""

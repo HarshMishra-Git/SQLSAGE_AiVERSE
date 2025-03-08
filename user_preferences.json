@@ -1,0 +1,16 @@
+{
+  "theme": "dark",
+  "dialect": "postgresql",
+  "font_size": "medium",
+  "show_line_numbers": true,
+  "auto_complete": true,
+  "connection_profiles": [],
+  "recent_connections": [],
+  "shared_queries": [],
+  "performance_metrics": {
+    "total_queries": 5,
+    "successful_queries": 4,
+    "average_execution_time": 1.8284905910491944,
+    "last_updated": "2025-03-08T16:50:32.236349"
+  }
+}

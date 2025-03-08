@@ -1,0 +1,10 @@
+graphviz
+networkx
+openpyxl
+pandas
+plotly
+psycopg2-binary
+pygments
+requests
+sqlparse
+streamlit

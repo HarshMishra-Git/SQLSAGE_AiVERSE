@@ -1,0 +1,38 @@
+[
+    {
+      "timestamp": "2025-03-08T10:08:45.158228",
+      "original_query": "SELECT product_id product_name price FROM products WHERE in_stock = TRUE;",
+      "corrected_query": "SELECTproduct_id, product_name, priceFROM products WHERE in_stock = TRUE;",
+      "correction_message": "Added missing commas in SELECT clause."
+    },
+    {
+      "timestamp": "2025-03-08T10:08:45.158501",
+      "original_query": "SELECT id first_name last_name email FROM customers WHERE active = TRUE;",
+      "corrected_query": "SELECTid, first_name, last_name, emailFROM customers WHERE active = TRUE;",
+      "correction_message": "Added missing commas in SELECT clause."
+    },
+    {
+      "timestamp": "2025-03-08T10:08:45.161153",
+      "original_query": "SELECT order_id customer_id product_name quantity FROM orders WHERE order_date > '2023-01-01'",
+      "corrected_query": "SELECTorder_id, customer_id, product_name, quantityFROM orders WHERE order_date > '2023-01-01';",
+      "correction_message": "Added missing semicolon. Added missing commas in SELECT clause."
+    },
+    {
+      "timestamp": "2025-03-08T10:08:45.161368",
+      "original_query": "SELECT product_id, product_name price FROM products;",
+      "corrected_query": "SELECTproduct_id, product_name, priceFROM products;",
+      "correction_message": "Added missing commas in SELECT clause."
+    },
+    {
+      "timestamp": "2025-03-08T10:08:45.161572",
+      "original_query": "SELECT product_id product_name price FROM products WHERE in_stock = TRUE;",
+      "corrected_query": "SELECTproduct_id, product_name, priceFROM products WHERE in_stock = TRUE;",
+      "correction_message": "Added missing commas in SELECT clause."
+    },
+    {
+      "timestamp": "2025-03-08T10:11:43.789255",
+      "original_query": "SELECT product_id, product_name, price FROM products WHERE in_stock = TRUE;",
+      "corrected_query": "SELECTproduct_id, product_name, priceFROM products WHERE in_stock = TRUE;",
+      "correction_message": ""
+    }
+  ]
