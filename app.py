@@ -3,9 +3,6 @@ import json
 from utils.sql_validator import validate_sql_query
 from utils.schema_validator import validate_schema
 from utils.eden_ai_client import generate_sql_query
-import pygments
-from pygments.formatters import HtmlFormatter
-from pygments.lexers import SqlLexer
 
 # Page config
 st.set_page_config(
@@ -20,28 +17,15 @@ def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-    # Pygments CSS for syntax highlighting
-    formatter = HtmlFormatter(style='monokai')
-    css_styles = f"<style>{formatter.get_style_defs()}</style>"
-    st.markdown(css_styles, unsafe_allow_html=True)
-
 local_css("assets/custom.css")
 
 # Session state initialization
-if 'dark_theme' not in st.session_state:
-    st.session_state.dark_theme = False
 if 'schema' not in st.session_state:
     st.session_state.schema = None
 
 # Sidebar
 with st.sidebar:
     st.title("⚙️ Settings")
-
-    # Theme toggle
-    theme = st.toggle("Dark Theme", value=st.session_state.dark_theme)
-    if theme != st.session_state.dark_theme:
-        st.session_state.dark_theme = theme
-        st.rerun()
 
     # Schema upload
     st.subheader("Database Schema")
@@ -80,16 +64,19 @@ if generate_btn and nl_query:
 
             # Validate generated SQL
             if validate_sql_query(sql_query):
-                # Display results in a clean format
-                st.markdown("### Generated SQL Query")
+                # Create a container for the SQL output
+                sql_container = st.container()
 
-                # Display the SQL in a code block with syntax highlighting
-                st.code(sql_query, language="sql")
+                with sql_container:
+                    st.markdown("### Generated SQL Query")
 
-                # Add copy button separately
-                if st.button("Copy to Clipboard"):
-                    st.write(st.clipboard(sql_query))
-                    st.success("SQL query copied to clipboard!")
+                    # Display SQL in a single code block
+                    st.code(sql_query, language="sql")
+
+                    # Add copy button with success message
+                    if st.button("📋 Copy SQL Query"):
+                        st.write(st.clipboard(sql_query))
+                        st.success("✅ SQL query copied to clipboard!")
             else:
                 st.error("Generated query failed validation")
 
