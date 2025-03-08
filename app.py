@@ -22,6 +22,10 @@ local_css("assets/custom.css")
 # Session state initialization
 if 'schema' not in st.session_state:
     st.session_state.schema = None
+if 'sql_query' not in st.session_state:
+    st.session_state.sql_query = None
+if 'show_copy_success' not in st.session_state:
+    st.session_state.show_copy_success = False
 
 # Sidebar
 with st.sidebar:
@@ -52,39 +56,43 @@ nl_query = st.text_area(
     placeholder="Example: Show me all customers who made purchases in the last month"
 )
 
-generate_btn = st.button("Generate SQL Query", type="primary")
-
-if generate_btn and nl_query:
-    try:
-        with st.spinner("Generating SQL query..."):
-            sql_query = generate_sql_query(
-                nl_query,
-                schema=st.session_state.schema
-            )
-
-            # Validate generated SQL
-            if validate_sql_query(sql_query):
-                # Create a container for the SQL output
-                sql_container = st.container()
-
-                with sql_container:
-                    st.markdown("### Generated SQL Query")
-
-                    # Display SQL in a single code block
-                    st.code(sql_query, language="sql")
-
-                    # Add copy button with success message
-                    if st.button("📋 Copy SQL Query"):
-                        st.write(st.clipboard(sql_query))
-                        st.success("✅ SQL query copied to clipboard!")
-            else:
-                st.error("Generated query failed validation")
-
-    except Exception as e:
-        st.error(f"Error generating SQL query: {str(e)}")
-else:
-    if generate_btn:
+# Generate button
+if st.button("Generate SQL Query", type="primary", key="generate"):
+    if nl_query:
+        try:
+            with st.spinner("Generating SQL query..."):
+                sql_query = generate_sql_query(
+                    nl_query,
+                    schema=st.session_state.schema
+                )
+                if validate_sql_query(sql_query):
+                    st.session_state.sql_query = sql_query
+                    st.session_state.show_copy_success = False
+                else:
+                    st.error("Generated query failed validation")
+        except Exception as e:
+            st.error(f"Error generating SQL query: {str(e)}")
+    else:
         st.warning("Please enter a query first")
+
+# Display SQL if available
+if st.session_state.sql_query:
+    st.markdown("### Generated SQL Query")
+
+    # SQL query display
+    query_container = st.container()
+    with query_container:
+        st.code(st.session_state.sql_query, language="sql")
+
+        # Copy button in a more compact layout
+        col1, col2, *_ = st.columns([1, 3, 8])
+        with col1:
+            if st.button("📋", key="copy"):
+                st.write(st.clipboard(st.session_state.sql_query))
+                st.session_state.show_copy_success = True
+        with col2:
+            if st.session_state.show_copy_success:
+                st.success("Copied!")
 
 # Usage instructions
 with st.expander("How to use SQL SAGE"):
