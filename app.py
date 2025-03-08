@@ -19,29 +19,11 @@ def local_css(file_name):
 
 local_css("assets/custom.css")
 
-# Add JavaScript for copy functionality
-st.markdown("""
-<script>
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(
-        function() {
-            document.getElementById("copy-status").style.display = "block";
-            setTimeout(function() {
-                document.getElementById("copy-status").style.display = "none";
-            }, 2000);
-        }
-    );
-}
-</script>
-""", unsafe_allow_html=True)
-
 # Session state initialization
 if 'schema' not in st.session_state:
     st.session_state.schema = None
 if 'sql_query' not in st.session_state:
     st.session_state.sql_query = None
-if 'show_copy_success' not in st.session_state:
-    st.session_state.show_copy_success = False
 
 # Sidebar
 with st.sidebar:
@@ -83,7 +65,6 @@ if st.button("Generate SQL Query", type="primary", key="generate"):
                 )
                 if validate_sql_query(sql_query):
                     st.session_state.sql_query = sql_query
-                    st.session_state.show_copy_success = False
                 else:
                     st.error("Generated query failed validation")
         except Exception as e:
@@ -94,20 +75,7 @@ if st.button("Generate SQL Query", type="primary", key="generate"):
 # Display SQL if available
 if st.session_state.sql_query:
     st.markdown("### Generated SQL Query")
-
-    # SQL query display
     st.code(st.session_state.sql_query, language="sql")
-
-    # Copy button using JavaScript
-    copy_button_html = f"""
-    <button 
-        onclick="copyToClipboard(`{st.session_state.sql_query}`)"
-        style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; background-color: #FF4B4B; color: white; cursor: pointer;">
-        📋 Copy SQL
-    </button>
-    <span id="copy-status" style="display: none; color: green; margin-left: 1rem;">✅ Copied!</span>
-    """
-    st.markdown(copy_button_html, unsafe_allow_html=True)
 
 # Usage instructions
 with st.expander("How to use SQL SAGE"):
@@ -115,7 +83,7 @@ with st.expander("How to use SQL SAGE"):
     1. **Enter your query** in natural language
     2. Optionally **upload your database schema** for more accurate results
     3. Click **Generate SQL Query** to convert your query
-    4. Use the **Copy** button to copy the generated SQL
+    4. Use the built-in copy button in the code block to copy the generated SQL
 
     For best results:
     - Be specific in your natural language query

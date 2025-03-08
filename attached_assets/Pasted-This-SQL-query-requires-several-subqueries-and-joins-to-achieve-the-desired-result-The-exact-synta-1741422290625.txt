@@ -1,0 +1,82 @@
+This SQL query requires several subqueries and joins to achieve the desired result.  The exact syntax might vary slightly depending on your specific database system (MySQL, PostgreSQL, SQL Server, etc.), but the general structure should be similar.
+
+```sql
+WITH CustomerOrders AS (
+    SELECT
+        c.customer_name,
+        o.order_id,
+        oi.product_id,
+        oi.quantity * p.price AS order_item_total
+    FROM
+        Customers c
+    JOIN
+        Orders o ON c.customer_id = o.customer_id
+    JOIN
+        OrderItems oi ON o.order_id = oi.order_id
+    JOIN
+        Products p ON oi.product_id = p.product_id
+    WHERE
+        o.order_date >= DATE('now', '-6 months') -- Adjust date function as needed for your DB
+),
+CustomerTotals AS (
+    SELECT
+        customer_name,
+        SUM(order_item_total) AS total_spent,
+        COUNT(*) AS order_count
+    FROM
+        CustomerOrders
+    GROUP BY
+        customer_name
+    HAVING
+        COUNT(*) >= 3
+),
+AverageOrderValue AS (
+    SELECT AVG(order_item_total) AS avg_order_value
+    FROM CustomerOrders
+),
+FrequentProduct AS (
+  SELECT
+        customer_
+
+<button onclick="copyToClipboard(`This SQL query requires several subqueries and joins to achieve the desired result. The exact syntax might vary slightly depending on your specific database system (MySQL, PostgreSQL, SQL Server, etc.), but the general structure should be similar.
+
+WITH CustomerOrders AS (
+    SELECT
+        c.customer_name,
+        o.order_id,
+        oi.product_id,
+        oi.quantity * p.price AS order_item_total
+    FROM
+        Customers c
+    JOIN
+        Orders o ON c.customer_id = o.customer_id
+    JOIN
+        OrderItems oi ON o.order_id = oi.order_id
+    JOIN
+        Products p ON oi.product_id = p.product_id
+    WHERE
+        o.order_date >= DATE('now', '-6 months') -- Adjust date function as needed for your DB
+),
+CustomerTotals AS (
+    SELECT
+        customer_name,
+        SUM(order_item_total) AS total_spent,
+        COUNT(*) AS order_count
+    FROM
+        CustomerOrders
+    GROUP BY
+        customer_name
+    HAVING
+        COUNT(*) >= 3
+),
+AverageOrderValue AS (
+    SELECT AVG(order_item_total) AS avg_order_value
+    FROM CustomerOrders
+),
+FrequentProduct AS (
+  SELECT
+        customer_`)"
+        style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; background-color: #FF4B4B; color: white; cursor: pointer;">
+        📋 Copy SQL
+    </button>
+    <span id="copy-status" style="display: none; color: green; margi
