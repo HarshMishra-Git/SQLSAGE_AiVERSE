@@ -41,7 +41,7 @@ with st.sidebar:
     theme = st.toggle("Dark Theme", value=st.session_state.dark_theme)
     if theme != st.session_state.dark_theme:
         st.session_state.dark_theme = theme
-        st.rerun()  # Updated from experimental_rerun() to rerun()
+        st.rerun()
 
     # Schema upload
     st.subheader("Database Schema")
@@ -62,9 +62,11 @@ st.title("🔮 SQL SAGE by AiVERSE")
 st.markdown("### AI-Powered Natural Language to SQL Query Generator")
 
 # Input section
-nl_query = st.text_area("Enter your query in natural language", 
-                        height=100,
-                        placeholder="Example: Show me all customers who made purchases in the last month")
+nl_query = st.text_area(
+    "Enter your query in natural language",
+    height=100,
+    placeholder="Example: Show me all customers who made purchases in the last month"
+)
 
 generate_btn = st.button("Generate SQL Query", type="primary")
 
@@ -72,28 +74,22 @@ if generate_btn and nl_query:
     try:
         with st.spinner("Generating SQL query..."):
             sql_query = generate_sql_query(
-                nl_query, 
+                nl_query,
                 schema=st.session_state.schema
             )
 
             # Validate generated SQL
             if validate_sql_query(sql_query):
-                # Syntax highlighting
-                formatted_sql = pygments.highlight(
-                    sql_query,
-                    SqlLexer(),
-                    HtmlFormatter(style='monokai')
-                )
-
-                # Display results
+                # Display results in a clean format
                 st.markdown("### Generated SQL Query")
-                st.markdown(f'<div class="sql-container">{formatted_sql}</div>', 
-                          unsafe_allow_html=True)
 
-                # Copy button
+                # Display the SQL in a code block with syntax highlighting
                 st.code(sql_query, language="sql")
+
+                # Add copy button separately
                 if st.button("Copy to Clipboard"):
                     st.write(st.clipboard(sql_query))
+                    st.success("SQL query copied to clipboard!")
             else:
                 st.error("Generated query failed validation")
 
