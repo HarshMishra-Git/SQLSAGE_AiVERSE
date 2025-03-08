@@ -14,5 +14,21 @@
     "dialect": "mysql",
     "tags": [],
     "favorite": false
+  },
+  {
+    "timestamp": "2025-03-08T08:46:20.816101",
+    "natural_query": "Retrieve the names of all customers who have placed at least three orders in the last six months, along with the total amount spent by each customer, but only include those whose total spending exceeds the average order value across all customers during the same period. Additionally, display the most frequently purchased product for each of these customers.",
+    "sql_query": "This SQL query requires several subqueries and joins to achieve the desired result.  The exact syntax might vary slightly depending on your specific database system (MySQL, PostgreSQL, SQL Server, etc.), but the general structure should be similar.\n\n```sql\nWITH CustomerOrders AS (\n    SELECT\n        c.CustomerID,\n        c.CustomerName,\n        o.OrderID,\n        o.OrderDate,\n        oi.ProductID,\n        oi.Quantity * p.Price AS OrderTotalAmount\n    FROM\n        Customers c  -- Assuming a Customers table\n    JOIN\n        Orders o ON c.CustomerID = o.CustomerID  -- Assuming an Orders table\n    JOIN\n        OrderItems oi ON o.OrderID = oi.OrderID  -- Assuming an OrderItems table\n    JOIN\n        Products p ON oi.ProductID = p.ProductID  -- Assuming a Products table\n    WHERE\n        o.OrderDate >= DATE('now', '-6 months') -- Orders in the last 6 months\n),\nCustomerTotals AS (\n    SELECT\n        CustomerID,\n        CustomerName,\n        SUM(OrderTotalAmount) AS TotalSpent,\n        COUNT(*) AS OrderCount\n    FROM\n        CustomerOrders\n    GROUP BY\n        CustomerID, CustomerName\n    HAVING\n        COUNT(*) >= 3\n),\nAverageOrderValue AS (\n    SELECT AVG(OrderTotalAmount) AS AvgOrderValue\n    FROM CustomerOrders",
+    "dialect": "mysql",
+    "tags": [],
+    "favorite": false
+  },
+  {
+    "timestamp": "2025-03-08T08:50:36.561785",
+    "natural_query": "Retrieve the names of all customers who have placed at least three orders in the last six months, along with the total amount spent by each customer, but only include those whose total spending exceeds the average order value across all customers during the same period. Additionally, display the most frequently purchased product for each of these customers.",
+    "sql_query": "This SQL query requires several subqueries and joins to achieve the desired result.  The exact syntax might vary slightly depending on your specific database system (MySQL, PostgreSQL, SQL Server, etc.), but the general structure should be similar.\n\n\"\"\"sql\nWITH CustomerOrders AS (\n    SELECT\n        c.customer_name,\n        o.order_id,\n        oi.product_id,\n        oi.quantity * p.price AS order_item_total\n    FROM\n        Customers c\n    JOIN\n        Orders o ON c.customer_id = o.customer_id\n    JOIN\n        OrderItems oi ON o.order_id = oi.order_id\n    JOIN\n        Products p ON oi.product_id = p.product_id\n    WHERE\n        o.order_date >= DATE('now', '-6 months') -- Adjust date function as needed for your DB\n),\nCustomerTotals AS (\n    SELECT\n        customer_name,\n        SUM(order_item_total) AS total_spent,\n        COUNT(*) AS order_count\n    FROM\n        CustomerOrders\n    GROUP BY\n        customer_name\n    HAVING\n        COUNT(*) >= 3\n),\nAverageOrderValue AS (\n    SELECT AVG(order_item_total) AS avg_order_value\n    FROM CustomerOrders\n),\nMostFrequentProduct AS (\n  SELECT\n        customer",
+    "dialect": "postgresql",
+    "tags": [],
+    "favorite": false
   }
 ]

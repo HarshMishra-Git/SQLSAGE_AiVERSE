@@ -1,7 +1,9 @@
+"""SQL SAGE - AI-Powered SQL Query Generator"""
 import streamlit as st
 import json
 import pandas as pd
 from datetime import datetime
+import time
 from utils.sql_validator import validate_sql_query
 from utils.schema_validator import validate_schema
 from utils.eden_ai_client import generate_sql_query
@@ -11,6 +13,7 @@ from utils.query_history import QueryHistory
 from utils.schema_visualizer import SchemaVisualizer
 from utils.error_handler import SQLErrorHandler
 from utils.query_playground import QueryPlayground
+from utils.user_preferences import UserPreferences
 
 # Page config
 st.set_page_config(
@@ -38,13 +41,21 @@ if 'selected_dialect' not in st.session_state:
     st.session_state.selected_dialect = 'mysql'
 if 'playground' not in st.session_state:
     st.session_state.playground = QueryPlayground()
+if 'user_preferences' not in st.session_state:
+    st.session_state.user_preferences = UserPreferences()
 
 # Initialize utilities
 dialect_converter = SQLDialectConverter()
 query_optimizer = QueryOptimizer()
 
 # Create tabs for different features
-tab1, tab2, tab3 = st.tabs(["Query Generator", "Query Playground", "Schema Explorer"])
+tab1, tab2, tab3, tab4, tab5 = st.tabs([
+    "Query Generator",
+    "Query Playground",
+    "Schema Explorer",
+    "Performance Metrics",
+    "Settings"
+])
 
 with tab1:
     st.title("🔮 SQL SAGE by AiVERSE")
@@ -59,41 +70,41 @@ with tab1:
 
     col1, col2 = st.columns([2, 1])
     with col1:
-        # Generate button with loading animation
         if st.button("Generate SQL Query", type="primary"):
             if nl_query:
                 try:
+                    start_time = time.time()
                     with st.spinner("🎭 Analyzing your query..."):
-                        # Generate SQL
                         sql_query = generate_sql_query(
                             nl_query,
                             schema=st.session_state.schema
                         )
 
-                        # Validate and optimize
                         if validate_sql_query(sql_query):
                             optimized_query, suggestions = query_optimizer.optimize_query(
                                 sql_query,
                                 st.session_state.schema
                             )
 
-                            # Convert to selected dialect
                             final_query = dialect_converter.convert_query(
                                 optimized_query,
                                 st.session_state.selected_dialect
                             )
 
-                            # Save to history
+                            execution_time = time.time() - start_time
+                            st.session_state.user_preferences.update_performance_metrics(
+                                execution_time,
+                                True
+                            )
+
                             st.session_state.query_history.add_query(
                                 nl_query,
                                 final_query,
                                 st.session_state.selected_dialect
                             )
 
-                            # Update session state
                             st.session_state.sql_query = final_query
 
-                            # Show optimization suggestions
                             if suggestions:
                                 with st.expander("📊 Query Optimization Suggestions"):
                                     for suggestion in suggestions:
@@ -104,6 +115,10 @@ with tab1:
                             )
                             st.error(error_msg)
                             st.info(f"💡 Suggestion: {suggestion}")
+                            st.session_state.user_preferences.update_performance_metrics(
+                                time.time() - start_time,
+                                False
+                            )
 
                 except Exception as e:
                     error_msg, color, suggestion = SQLErrorHandler.format_error(str(e))
@@ -113,7 +128,6 @@ with tab1:
                 st.warning("Please enter a query first")
 
     with col2:
-        # SQL Dialect Selection
         st.markdown("### SQL Dialect")
         selected_dialect = st.selectbox(
             "Select SQL Dialect",
@@ -124,46 +138,58 @@ with tab1:
 
         if selected_dialect != st.session_state.selected_dialect:
             st.session_state.selected_dialect = selected_dialect
+            st.session_state.user_preferences.update_preference("dialect", selected_dialect)
             if st.session_state.sql_query:
                 st.session_state.sql_query = dialect_converter.convert_query(
                     st.session_state.sql_query,
                     selected_dialect
                 )
 
-    # Display SQL if available
     if st.session_state.sql_query:
         st.markdown("### Generated SQL Query")
         st.code(st.session_state.sql_query, language="sql")
 
-        # Export options
-        export_format = st.selectbox(
-            "Export Format",
-            options=["CSV", "Excel"],
-            key="export_format"
-        )
+        col1, col2 = st.columns([1, 1])
+        with col1:
+            # Export options
+            export_format = st.selectbox(
+                "Export Format",
+                options=["CSV", "Excel"]
+            )
 
-        if st.button("Export Query"):
-            try:
-                # Create sample data for export
-                data = pd.DataFrame({
-                    "query": [st.session_state.sql_query],
-                    "dialect": [st.session_state.selected_dialect],
-                    "timestamp": [datetime.now().isoformat()]
-                })
+            if st.button("Export Query"):
+                try:
+                    data = pd.DataFrame({
+                        "query": [st.session_state.sql_query],
+                        "dialect": [st.session_state.selected_dialect],
+                        "timestamp": [datetime.now().isoformat()]
+                    })
 
-                if export_format == "CSV":
-                    data.to_csv("query_export.csv", index=False)
-                    st.success("Query exported to CSV!")
-                else:
-                    data.to_excel("query_export.xlsx", index=False)
-                    st.success("Query exported to Excel!")
-            except Exception as e:
-                st.error(f"Error exporting query: {str(e)}")
+                    if export_format == "CSV":
+                        data.to_csv("query_export.csv", index=False)
+                        st.success("Query exported to CSV!")
+                    else:
+                        data.to_excel("query_export.xlsx", index=False)
+                        st.success("Query exported to Excel!")
+                except Exception as e:
+                    st.error(f"Error exporting query: {str(e)}")
+
+        with col2:
+            # Share query
+            if st.button("Share Query"):
+                annotation = st.text_area("Add notes (optional)")
+                if st.button("Confirm Share"):
+                    st.session_state.user_preferences.add_shared_query({
+                        "query": st.session_state.sql_query,
+                        "natural_query": nl_query,
+                        "dialect": st.session_state.selected_dialect,
+                        "annotation": annotation,
+                        "shared_at": datetime.now().isoformat()
+                    })
+                    st.success("Query shared successfully!")
 
 with tab2:
     st.title("🎮 Interactive Query Playground")
-
-    # Query input
     test_query = st.text_area(
         "Enter your SQL query",
         height=150,
@@ -174,22 +200,32 @@ with tab2:
     with col1:
         if st.button("Execute Query", type="primary"):
             if test_query:
+                start_time = time.time()
                 with st.spinner("🔍 Executing query..."):
                     results, error, suggestions = st.session_state.playground.execute_test_query(
                         test_query,
                         st.session_state.selected_dialect
                     )
+                    execution_time = time.time() - start_time
 
                     if error:
                         st.error(error)
                         if suggestions:
                             st.info("💡 " + suggestions[0])
+                        st.session_state.user_preferences.update_performance_metrics(
+                            execution_time,
+                            False
+                        )
                     elif results is not None:
                         st.dataframe(results)
                         if suggestions:
                             with st.expander("📊 Query Optimization Suggestions"):
                                 for suggestion in suggestions:
                                     st.info(suggestion)
+                        st.session_state.user_preferences.update_performance_metrics(
+                            execution_time,
+                            True
+                        )
             else:
                 st.warning("Please enter a query to execute")
 
@@ -204,8 +240,6 @@ with tab2:
 
 with tab3:
     st.title("📊 Schema Explorer")
-
-    # Schema upload and visualization
     st.subheader("Database Schema")
     schema_file = st.file_uploader("Upload Schema (JSON)", type=['json'])
     if schema_file:
@@ -222,16 +256,94 @@ with tab3:
         except Exception as e:
             st.error(f"Error parsing schema: {str(e)}")
 
-    # Query History
-    st.subheader("Recent Queries")
-    recent_queries = st.session_state.query_history.get_recent_queries()
-    for query in recent_queries:
-        with st.expander(f"Query from {query['timestamp']}"):
+with tab4:
+    st.title("📈 Performance Metrics")
+    metrics = st.session_state.user_preferences.get_preference("performance_metrics")
+
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total Queries", metrics["total_queries"])
+    with col2:
+        success_rate = (metrics["successful_queries"] / metrics["total_queries"] * 100 
+                       if metrics["total_queries"] > 0 else 0)
+        st.metric("Success Rate", f"{success_rate:.1f}%")
+    with col3:
+        st.metric("Avg. Execution Time", f"{metrics['average_execution_time']:.3f}s")
+
+    st.subheader("Recent Shared Queries")
+    shared_queries = st.session_state.user_preferences.get_shared_queries()
+    for query in shared_queries:
+        with st.expander(f"Query shared on {query['shared_at']}"):
             st.text(query['natural_query'])
             st.code(query['sql_query'], language="sql")
-            if st.button("Use This Query", key=query['timestamp']):
-                st.session_state.sql_query = query['sql_query']
-                st.experimental_rerun()
+            if query['annotation']:
+                st.info(f"📝 Note: {query['annotation']}")
+
+with tab5:
+    st.title("⚙️ Settings")
+
+    # Theme settings
+    theme = st.selectbox(
+        "Theme",
+        options=["light", "dark"],
+        index=0 if st.session_state.user_preferences.get_preference("theme") == "light" else 1
+    )
+    if theme != st.session_state.user_preferences.get_preference("theme"):
+        st.session_state.user_preferences.update_preference("theme", theme)
+
+    # Font size
+    font_size = st.select_slider(
+        "Font Size",
+        options=["small", "medium", "large"],
+        value=st.session_state.user_preferences.get_preference("font_size", "medium")
+    )
+    if font_size != st.session_state.user_preferences.get_preference("font_size"):
+        st.session_state.user_preferences.update_preference("font_size", font_size)
+
+    # Editor preferences
+    show_line_numbers = st.checkbox(
+        "Show Line Numbers",
+        value=st.session_state.user_preferences.get_preference("show_line_numbers", True)
+    )
+    if show_line_numbers != st.session_state.user_preferences.get_preference("show_line_numbers"):
+        st.session_state.user_preferences.update_preference("show_line_numbers", show_line_numbers)
+
+    auto_complete = st.checkbox(
+        "Enable Auto-Complete",
+        value=st.session_state.user_preferences.get_preference("auto_complete", True)
+    )
+    if auto_complete != st.session_state.user_preferences.get_preference("auto_complete"):
+        st.session_state.user_preferences.update_preference("auto_complete", auto_complete)
+
+    # Connection profiles
+    st.subheader("Connection Profiles")
+    if st.button("Add New Connection Profile"):
+        with st.form("new_connection"):
+            profile_name = st.text_input("Profile Name")
+            host = st.text_input("Host")
+            port = st.text_input("Port")
+            database = st.text_input("Database")
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+
+            if st.form_submit_button("Save Profile"):
+                st.session_state.user_preferences.add_connection_profile({
+                    "name": profile_name,
+                    "host": host,
+                    "port": port,
+                    "database": database,
+                    "username": username,
+                    "password": password
+                })
+                st.success("Connection profile saved!")
+
+    # Display existing profiles
+    profiles = st.session_state.user_preferences.get_connection_profiles()
+    for profile in profiles:
+        with st.expander(f"Profile: {profile['name']}"):
+            st.text(f"Host: {profile['host']}")
+            st.text(f"Database: {profile['database']}")
+            st.text(f"Username: {profile['username']}")
 
 # Usage instructions
 with st.expander("How to use SQL SAGE"):
@@ -245,6 +357,9 @@ with st.expander("How to use SQL SAGE"):
     7. Export your query in CSV or Excel format
     8. Try the interactive playground to test your queries
     9. Explore the schema visualization for better understanding
+    10. Monitor performance metrics in the new Performance Metrics tab.
+    11. Customize the application's appearance and behavior in the Settings tab.
+
 
     For best results:
     - Be specific in your natural language query
