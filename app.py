@@ -19,6 +19,22 @@ def local_css(file_name):
 
 local_css("assets/custom.css")
 
+# Add JavaScript for copy functionality
+st.markdown("""
+<script>
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(
+        function() {
+            document.getElementById("copy-status").style.display = "block";
+            setTimeout(function() {
+                document.getElementById("copy-status").style.display = "none";
+            }, 2000);
+        }
+    );
+}
+</script>
+""", unsafe_allow_html=True)
+
 # Session state initialization
 if 'schema' not in st.session_state:
     st.session_state.schema = None
@@ -80,19 +96,18 @@ if st.session_state.sql_query:
     st.markdown("### Generated SQL Query")
 
     # SQL query display
-    query_container = st.container()
-    with query_container:
-        st.code(st.session_state.sql_query, language="sql")
+    st.code(st.session_state.sql_query, language="sql")
 
-        # Copy button in a more compact layout
-        col1, col2, *_ = st.columns([1, 3, 8])
-        with col1:
-            if st.button("📋", key="copy"):
-                st.write(st.clipboard(st.session_state.sql_query))
-                st.session_state.show_copy_success = True
-        with col2:
-            if st.session_state.show_copy_success:
-                st.success("Copied!")
+    # Copy button using JavaScript
+    copy_button_html = f"""
+    <button 
+        onclick="copyToClipboard(`{st.session_state.sql_query}`)"
+        style="padding: 0.5rem 1rem; border-radius: 0.5rem; border: none; background-color: #FF4B4B; color: white; cursor: pointer;">
+        📋 Copy SQL
+    </button>
+    <span id="copy-status" style="display: none; color: green; margin-left: 1rem;">✅ Copied!</span>
+    """
+    st.markdown(copy_button_html, unsafe_allow_html=True)
 
 # Usage instructions
 with st.expander("How to use SQL SAGE"):
