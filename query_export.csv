@@ -1,0 +1,39 @@
+query,dialect,timestamp
+"This SQL query requires several subqueries and joins to achieve the desired result.  The exact syntax might vary slightly depending on your specific database system (MySQL, PostgreSQL, SQL Server, etc.), but the general structure should be similar.
+
+```sql
+WITH CustomerOrders AS (
+    SELECT
+        c.CustomerID,
+        c.CustomerName,
+        o.OrderID,
+        o.OrderDate,
+        oi.ProductID,
+        oi.Quantity * p.Price AS OrderTotalAmount
+    FROM
+        Customers c  -- Assuming a Customers table
+    JOIN
+        Orders o ON c.CustomerID = o.CustomerID  -- Assuming an Orders table
+    JOIN
+        OrderItems oi ON o.OrderID = oi.OrderID  -- Assuming an OrderItems table
+    JOIN
+        Products p ON oi.ProductID = p.ProductID  -- Assuming a Products table
+    WHERE
+        o.OrderDate >= DATE('now', '-6 months') -- Orders in the last 6 months
+),
+CustomerTotals AS (
+    SELECT
+        CustomerID,
+        CustomerName,
+        SUM(OrderTotalAmount) AS TotalSpent,
+        COUNT(*) AS OrderCount
+    FROM
+        CustomerOrders
+    GROUP BY
+        CustomerID, CustomerName
+    HAVING
+        COUNT(*) >= 3
+),
+AverageOrderValue AS (
+    SELECT AVG(OrderTotalAmount) AS AvgOrderValue
+    FROM CustomerOrders",mysql,2025-03-08T08:35:55.083205
